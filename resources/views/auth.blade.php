@@ -9,6 +9,8 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.1.3/css/bootstrap.min.css" rel="stylesheet">
     <!-- Font Awesome CSS -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <!-- Toastr CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
     <!-- Custom CSS -->
     <style>
         body {
@@ -60,11 +62,11 @@
         <ul class="nav nav-tabs form-tabs" id="authTab" role="tablist">
             <li class="nav-item" role="presentation">
                 <button class="nav-link active" id="login-tab" data-bs-toggle="tab" data-bs-target="#login" type="button"
-                    role="tab" aria-controls="login" aria-selected="true">Login</button>
+                        role="tab" aria-controls="login" aria-selected="true">Login</button>
             </li>
             <li class="nav-item" role="presentation">
                 <button class="nav-link" id="signup-tab" data-bs-toggle="tab" data-bs-target="#signup" type="button"
-                    role="tab" aria-controls="signup" aria-selected="false">Signup</button>
+                        role="tab" aria-controls="signup" aria-selected="false">Signup</button>
             </li>
         </ul>
 
@@ -115,23 +117,73 @@
     <!-- jQuery and Bootstrap JS -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.1.3/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
     <script>
-        $(document).ready(function () {
-            $('#loginForm').on('submit', function (event) {
+        $(document).ready(function() {
+            // AJAX for Login Form
+            $('#loginForm').on('submit', function(event) {
                 event.preventDefault();
-                alert('Login submitted');
+                let email = $('#emailLogin').val();
+                let password = $('#passwordLogin').val();
+
+                $.ajax({
+                    url: '{{ route('login') }}', // This route will point to login processing
+                    method: 'POST',
+                    data: {
+                        _token: '{{ csrf_token() }}',
+                        email: email,
+                        password: password
+                    },
+                    success: function(response) {
+                        toastr.success(response.message);
+                        setTimeout(() => {
+                            window.location.href = response.redirect; // Redirect to the target page
+                        }, 2000);
+                    },
+                    error: function(xhr) {
+                        let errors = xhr.responseJSON.errors;
+                        $.each(errors, function(key, value) {
+                            toastr.error(value[0]); // Show each error message
+                        });
+                    }
+                });
             });
 
-            $('#signupForm').on('submit', function (event) {
+            // AJAX for Signup Form
+            $('#signupForm').on('submit', function(event) {
                 event.preventDefault();
-                if ($('#passwordSignup').val() !== $('#confirmPassword').val()) {
-                    alert('Passwords do not match');
-                } else {
-                    alert('Signup submitted');
-                }
+                let name = $('#name').val();
+                let email = $('#emailSignup').val();
+                let password = $('#passwordSignup').val();
+                let confirmPassword = $('#confirmPassword').val();
+
+                $.ajax({
+                    url: '{{ route('signup') }}', // This route will point to signup processing
+                    method: 'POST',
+                    data: {
+                        _token: '{{ csrf_token() }}',
+                        name: name,
+                        email: email,
+                        password: password,
+                        password_confirmation: confirmPassword
+                    },
+                    success: function(response) {
+                        toastr.success(response.message);
+                        setTimeout(() => {
+                            window.location.href = response.redirect; // Redirect to the target page
+                        }, 2000);
+                    },
+                    error: function(xhr) {
+                        let errors = xhr.responseJSON.errors;
+                        $.each(errors, function(key, value) {
+                            toastr.error(value[0]); // Show each error message
+                        });
+                    }
+                });
             });
         });
     </script>
+
 </body>
 
 </html>
