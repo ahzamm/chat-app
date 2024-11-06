@@ -1,11 +1,15 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\AuthController;
+use App\Http\Controllers\HomeController;
 
-Route::get('/', 'App\Http\Controllers\AuthController@index');
-Route::post('/login', 'App\Http\Controllers\AuthController@login')->name('login');
-Route::post('/signup', 'App\Http\Controllers\AuthController@signup')->name('signup');
+// Routes for authentication
+Route::get('/', [AuthController::class, 'index']);
+Route::post('/login', [AuthController::class, 'login'])->name('login');
+Route::post('/signup', [AuthController::class, 'signup'])->name('signup');
 
-Route::middleware('guest')->group(function () {
-    Route::get('/home', 'App\Http\Controllers\HomeController@index')->middleware('auth');
+// Protect the /home route with auth middleware to allow access only for authenticated users
+Route::middleware('auth')->group(function () {
+    Route::get('/home', [HomeController::class, 'index'])->name('home');
 });

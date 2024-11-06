@@ -78,11 +78,11 @@
                 <form id="loginForm">
                     <div class="mb-3">
                         <label for="emailLogin" class="form-label">Email address</label>
-                        <input type="email" class="form-control" id="emailLogin" placeholder="Enter email" required>
+                        <input type="email" class="form-control" id="emailLogin" placeholder="Enter email" >
                     </div>
                     <div class="mb-3">
                         <label for="passwordLogin" class="form-label">Password</label>
-                        <input type="password" class="form-control" id="passwordLogin" placeholder="Password" required>
+                        <input type="password" class="form-control" id="passwordLogin" placeholder="Password" >
                     </div>
                     <button type="submit" class="btn btn-primary w-100">Login</button>
                 </form>
@@ -94,19 +94,19 @@
                 <form id="signupForm">
                     <div class="mb-3">
                         <label for="name" class="form-label">Name</label>
-                        <input type="text" class="form-control" id="name" placeholder="Enter full name" required>
+                        <input type="text" class="form-control" id="name" placeholder="Enter full name" >
                     </div>
                     <div class="mb-3">
                         <label for="emailSignup" class="form-label">Email address</label>
-                        <input type="email" class="form-control" id="emailSignup" placeholder="Enter email" required>
+                        <input type="email" class="form-control" id="emailSignup" placeholder="Enter email" >
                     </div>
                     <div class="mb-3">
                         <label for="passwordSignup" class="form-label">Password</label>
-                        <input type="password" class="form-control" id="passwordSignup" placeholder="Password" required>
+                        <input type="password" class="form-control" id="passwordSignup" placeholder="Password" >
                     </div>
                     <div class="mb-3">
                         <label for="confirmPassword" class="form-label">Confirm Password</label>
-                        <input type="password" class="form-control" id="confirmPassword" placeholder="Confirm Password" required>
+                        <input type="password" class="form-control" id="confirmPassword" placeholder="Confirm Password" >
                     </div>
                     <button type="submit" class="btn btn-primary w-100">Signup</button>
                 </form>
@@ -138,14 +138,24 @@
                         toastr.success(response.message);
                         setTimeout(() => {
                             window.location.href = response.redirect; // Redirect to the target page
-                        }, 2000);
+                        }, 1000);
                     },
                     error: function(xhr) {
-                        let errors = xhr.responseJSON.errors;
-                        $.each(errors, function(key, value) {
-                            toastr.error(value[0]); // Show each error message
-                        });
+                        if (xhr.status === 401) {
+                            // Handle 401 Unauthorized specifically
+                            toastr.error(xhr.responseJSON.message || 'Invalid credentials.');
+                        } else if (xhr.status === 422) {
+                            // Handle validation errors (422 Unprocessable Entity)
+                            let errors = xhr.responseJSON.errors;
+                            $.each(errors, function(key, value) {
+                                toastr.error(value[0]); // Show each validation error
+                            });
+                        } else {
+                            // Handle other types of errors
+                            toastr.error('An error occurred. Please try again.');
+                        }
                     }
+
                 });
             });
 
@@ -171,7 +181,7 @@
                         toastr.success(response.message);
                         setTimeout(() => {
                             window.location.href = response.redirect; // Redirect to the target page
-                        }, 2000);
+                        }, 1000);
                     },
                     error: function(xhr) {
                         let errors = xhr.responseJSON.errors;
