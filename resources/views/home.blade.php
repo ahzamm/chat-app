@@ -97,6 +97,13 @@
         <small>Last message...</small>
       </div>
     </div>
+    <div class="contact-item" onclick="openChat('Ahzam Ahmed')">
+      <img src="https://via.placeholder.com/40" alt="User Image">
+      <div>
+        <div class="contact-name">Ahzam Ahmed</div>
+        <small>Asslam-o-Alakum...</small>
+      </div>
+    </div>
     <!-- Add more contact items similarly -->
   </div>
 
