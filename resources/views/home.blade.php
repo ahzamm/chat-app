@@ -16,6 +16,7 @@
             --chat-bg: #f0f0f0;
             --sent-bg: #dcf8c6;
             --received-bg: #ffffff;
+            --text-color: #333;
         }
 
         body.dark-mode {
@@ -23,12 +24,12 @@
             --chat-bg: #333333;
             --sent-bg: #128c7e;
             --received-bg: #2a2a2a;
-            color: #e5e5e5;
+            --text-color: #e5e5e5;
         }
 
         body {
             background-color: var(--primary-bg);
-            color: #333;
+            color: var(--text-color);
         }
 
         .chat-container {
@@ -110,7 +111,8 @@
             border-radius: 10px;
             position: relative;
             clear: both;
-            color: #333;
+            color: var(--text-color);
+            /* Text color adjusted based on theme */
         }
 
         .message.sent {
@@ -236,7 +238,6 @@
 
         function logout() {
             alert('Logged out successfully!');
-            // Additional logout functionality can be added here
         }
 
         function toggleDarkMode() {
