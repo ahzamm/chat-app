@@ -235,17 +235,41 @@
         }
 
         function addContact() {
-            const contactName = $('#newContact').val().trim();
-            if (contactName) {
-                $('.contacts-list').append(`
-        <div class="contact-item" onclick="openChat('${contactName}')">
-          <img src="https://via.placeholder.com/40" alt="User Image">
-          <div><div class="contact-name">${contactName}</div></div>
-        </div>
-      `);
-                $('#newContact').val('');
+            const contactEmail = $('#newContact').val().trim();
+            if (contactEmail === '') {
+                toastr.error('Please enter an email.');
+                return;
             }
+
+            $.ajax({
+                url: '{{ route('add.contact') }}',
+                method: 'POST',
+                data: {
+                    email: contactEmail,
+                    _token: '{{ csrf_token() }}'
+                },
+                success: function(response) {
+                    toastr.success(response.message);
+
+                    // Append the new contact to the contact list in the sidebar
+                    $('.contacts-list').append(`
+                <div class="contact-item" onclick="openChat('${response.contact.name}')">
+                    <img src="${response.contact.profile_pic}" alt="User Image">
+                    <div>
+                        <div class="contact-name">${response.contact.name}</div>
+                    </div>
+                </div>
+            `);
+
+                    $('#newContact').val(''); // Clear the input field
+                },
+                error: function(xhr) {
+                    const error = xhr.responseJSON.message || 'Error adding contact';
+                    toastr.error(error);
+                }
+            });
         }
+
 
         function logout() {
             if (confirm('Are you sure you want to log out?')) {
