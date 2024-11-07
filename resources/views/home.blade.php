@@ -156,7 +156,7 @@
             <!-- Sidebar Header -->
             <div class="sidebar-header">
                 <img src="https://via.placeholder.com/45" alt="Profile Picture">
-                <span>User Name</span>
+                <span><strong></strong></span>
                 <button class="btn btn-light btn-sm logout-btn" onclick="logout()"><i class="fas fa-sign-out-alt"></i></button>
             </div>
 
@@ -266,10 +266,23 @@
                     }
                 });
             } else {
-                // If "No" is clicked, do nothing
-                alert('Logout canceled.');
+                toastr.info('Logout canceled.');
             }
         }
+
+        $.ajax({
+            url: '{{ route('user.details') }}',
+            method: 'GET',
+            success: function(response) {
+                if (response.name && response.profile_pic) {
+                    $('.sidebar-header img').attr('src', `storage/${response.profile_pic}`);
+                    $('.sidebar-header span strong').text(response.name);
+                }
+            },
+            error: function() {
+                console.error('Could not retrieve user details');
+            }
+        });
 
         function toggleDarkMode() {
             $('body').toggleClass('dark-mode');
