@@ -12,4 +12,5 @@ Route::post('/signup', [AuthController::class, 'signup'])->name('signup');
 // Protect the /home route with auth middleware to allow access only for authenticated users
 Route::middleware('auth')->group(function () {
     Route::get('/home', [HomeController::class, 'index'])->name('home');
+    Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 });

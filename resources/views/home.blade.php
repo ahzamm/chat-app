@@ -9,6 +9,8 @@
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <!-- Font Awesome for Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css">
+    <!-- Toastr CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
     <style>
         /* Custom CSS */
         :root {
@@ -207,6 +209,7 @@
     <!-- jQuery and Bootstrap Bundle (including Popper) -->
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
 
     <script>
         let currentChatUser = '';
@@ -245,7 +248,27 @@
         }
 
         function logout() {
-            alert('Logged out successfully!');
+            if (confirm('Are you sure you want to log out?')) {
+                $.ajax({
+                    url: '{{ route('logout') }}',
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    success: function() {
+                        toastr.success('Logged out successfully!');
+                        setTimeout(() => {
+                            window.location.href = '/';
+                        }, 1000);
+                    },
+                    error: function() {
+                        toastr.error('Logout failed. Please try again.');
+                    }
+                });
+            } else {
+                // If "No" is clicked, do nothing
+                alert('Logout canceled.');
+            }
         }
 
         function toggleDarkMode() {
