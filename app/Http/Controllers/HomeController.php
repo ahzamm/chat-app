@@ -62,7 +62,7 @@ class HomeController extends Controller
     public function getContacts()
     {
         $user     = Auth::user();
-        $contacts = $user->contactUsers()->select('users.id as user_id', 'users.name', 'users.profile_pic')->get();
+        $contacts = $user->contactUsers()->select('users.id as user_id', 'users.name', 'users.profile_pic')->orderBy('contacts.created_at', 'desc')->get();
 
         $formattedContacts = $contacts->map(function ($contact) {
             return [

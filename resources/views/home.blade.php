@@ -181,6 +181,8 @@
                     <small>Asslam-o-Alakum...</small>
                 </div>
             </div> --}}
+
+            <div id="dynamic-contacts"></div>
         </div>
 
         <!-- Chat Window -->
@@ -212,6 +214,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
 
     <script>
+        fetchContacts()
         let currentChatUser = '';
 
         function openChat(contactName) {
@@ -251,15 +254,7 @@
                 success: function(response) {
                     toastr.success(response.message);
 
-                    // Append the new contact to the contact list in the sidebar
-                    $('.contacts-list').append(`
-                <div class="contact-item" onclick="openChat('${response.contact.name}')">
-                    <img src="${response.contact.profile_pic}" alt="User Image">
-                    <div>
-                        <div class="contact-name">${response.contact.name}</div>
-                    </div>
-                </div>
-            `);
+                    fetchContacts()
 
                     $('#newContact').val(''); // Clear the input field
                 },
@@ -308,26 +303,29 @@
             }
         });
 
-        // Fetch and display contacts on page load
-        $.ajax({
-            url: '{{ route('user.contacts') }}',
-            method: 'GET',
-            success: function(contacts) {
-                contacts.forEach(contact => {
-                    $('.contacts-list').append(`
-                        <div class="contact-item" onclick="openChat('${contact.name}')">
-                            <img src="${contact.profile_pic}" alt="User Image">
-                            <div>
-                                <div class="contact-name">${contact.name}</div>
+        function fetchContacts() {
+            $('#dynamic-contacts').empty();
+
+            $.ajax({
+                url: '{{ route('user.contacts') }}',
+                method: 'GET',
+                success: function(contacts) {
+                    contacts.forEach(contact => {
+                        $('#dynamic-contacts').append(`
+                            <div class="contact-item" onclick="openChat('${contact.name}')">
+                                <img src="${contact.profile_pic}" alt="User Image">
+                                <div>
+                                    <div class="contact-name">${contact.name}</div>
+                                </div>
                             </div>
-                        </div>
-                    `);
-                });
-            },
-            error: function() {
-                console.error('Could not retrieve contacts');
-            }
-        });
+                        `);
+                    });
+                },
+                error: function() {
+                    console.error('Could not retrieve contacts');
+                }
+            });
+        }
 
         function toggleDarkMode() {
             $('body').toggleClass('dark-mode');
