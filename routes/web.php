@@ -15,4 +15,6 @@ Route::middleware('auth')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
     Route::get('/user/details', [HomeController::class, 'getUserDetails'])->name('user.details');
     Route::post('/add-contact', [HomeController::class, 'addContact'])->name('add.contact');
+    Route::get('/user/contacts', [HomeController::class, 'getContacts'])->name('user.contacts');
+
 });

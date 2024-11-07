@@ -58,4 +58,21 @@ class HomeController extends Controller
             ],
         ]);
     }
+
+    public function getContacts()
+    {
+        $user     = Auth::user();
+        $contacts = $user->contactUsers()->select('users.id as user_id', 'users.name', 'users.profile_pic')->get();
+
+        $formattedContacts = $contacts->map(function ($contact) {
+            return [
+                'id'          => $contact->id,
+                'name'        => $contact->name,
+                'profile_pic' => $contact->profile_pic ? asset('storage/' . $contact->profile_pic) : 'https://via.placeholder.com/40',
+            ];
+        });
+
+        return response()->json($formattedContacts);
+    }
+
 }

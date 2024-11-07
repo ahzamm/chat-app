@@ -167,7 +167,7 @@
             </div>
 
             <!-- Contacts List -->
-            <div class="contact-item" onclick="openChat('John Doe')">
+            {{-- <div class="contact-item" onclick="openChat('John Doe')">
                 <img src="https://via.placeholder.com/40" alt="User Image">
                 <div>
                     <div class="contact-name">John Doe</div>
@@ -180,7 +180,7 @@
                     <div class="contact-name">Ahzam Ahmed</div>
                     <small>Asslam-o-Alakum...</small>
                 </div>
-            </div>
+            </div> --}}
         </div>
 
         <!-- Chat Window -->
@@ -305,6 +305,27 @@
             },
             error: function() {
                 console.error('Could not retrieve user details');
+            }
+        });
+
+        // Fetch and display contacts on page load
+        $.ajax({
+            url: '{{ route('user.contacts') }}',
+            method: 'GET',
+            success: function(contacts) {
+                contacts.forEach(contact => {
+                    $('.contacts-list').append(`
+                        <div class="contact-item" onclick="openChat('${contact.name}')">
+                            <img src="${contact.profile_pic}" alt="User Image">
+                            <div>
+                                <div class="contact-name">${contact.name}</div>
+                            </div>
+                        </div>
+                    `);
+                });
+            },
+            error: function() {
+                console.error('Could not retrieve contacts');
             }
         });
 
