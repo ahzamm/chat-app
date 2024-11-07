@@ -17,6 +17,8 @@
             --sent-bg: #dcf8c6;
             --received-bg: #ffffff;
             --text-color: #333;
+            --hover-bg-light: #d0e0d0;
+            --hover-bg-dark: #444444;
         }
 
         body.dark-mode {
@@ -51,10 +53,16 @@
             display: flex;
             align-items: center;
             border-bottom: 1px solid #ddd;
+            transition: background-color 0.3s;
         }
 
         .contact-item:hover {
-            background-color: #d0e0d0;
+            background-color: var(--hover-bg-light);
+        }
+
+        body.dark-mode .contact-item:hover {
+            background-color: var(--hover-bg-dark);
+            /* Darker hover background for dark mode */
         }
 
         .contact-item img {
