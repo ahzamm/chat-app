@@ -78,11 +78,11 @@
                 <form id="loginForm">
                     <div class="mb-3">
                         <label for="emailLogin" class="form-label">Email address</label>
-                        <input type="email" class="form-control" id="emailLogin" placeholder="Enter email" >
+                        <input type="email" class="form-control" id="emailLogin" placeholder="Enter email">
                     </div>
                     <div class="mb-3">
                         <label for="passwordLogin" class="form-label">Password</label>
-                        <input type="password" class="form-control" id="passwordLogin" placeholder="Password" >
+                        <input type="password" class="form-control" id="passwordLogin" placeholder="Password">
                     </div>
                     <button type="submit" class="btn btn-primary w-100">Login</button>
                 </form>
@@ -91,26 +91,35 @@
             <!-- Signup Form -->
             <div class="tab-pane fade" id="signup" role="tabpanel" aria-labelledby="signup-tab">
                 <h2>Signup</h2>
-                <form id="signupForm">
+                <form id="signupForm" enctype="multipart/form-data">
                     <div class="mb-3">
                         <label for="name" class="form-label">Name</label>
-                        <input type="text" class="form-control" id="name" placeholder="Enter full name" >
+                        <input type="text" class="form-control" id="name" placeholder="Enter full name" required>
                     </div>
                     <div class="mb-3">
                         <label for="emailSignup" class="form-label">Email address</label>
-                        <input type="email" class="form-control" id="emailSignup" placeholder="Enter email" >
+                        <input type="email" class="form-control" id="emailSignup" placeholder="Enter email" required>
                     </div>
                     <div class="mb-3">
                         <label for="passwordSignup" class="form-label">Password</label>
-                        <input type="password" class="form-control" id="passwordSignup" placeholder="Password" >
+                        <input type="password" class="form-control" id="passwordSignup" placeholder="Password" required>
                     </div>
                     <div class="mb-3">
                         <label for="confirmPassword" class="form-label">Confirm Password</label>
-                        <input type="password" class="form-control" id="confirmPassword" placeholder="Confirm Password" >
+                        <input type="password" class="form-control" id="confirmPassword" placeholder="Confirm Password" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="profilePic" class="form-label">Profile Picture</label>
+                        <input type="file" class="form-control" id="profilePic" accept="image/*">
+                        <div class="mt-3">
+                            <img id="profilePicPreview" src="#" alt="Profile Preview"
+                                 style="display: none; width: 100px; height: 100px; border-radius: 50%;">
+                        </div>
                     </div>
                     <button type="submit" class="btn btn-primary w-100">Signup</button>
                 </form>
             </div>
+
         </div>
     </div>
 
@@ -159,23 +168,41 @@
                 });
             });
 
+            // Image preview
+            $('#profilePic').on('change', function() {
+                const file = this.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        $('#profilePicPreview').attr('src', e.target.result).show();
+                    }
+                    reader.readAsDataURL(file);
+                }
+            });
+
             // AJAX for Signup Form
             $('#signupForm').on('submit', function(event) {
                 event.preventDefault();
-                let name = $('#name').val();
-                let email = $('#emailSignup').val();
-                let password = $('#passwordSignup').val();
-                let confirmPassword = $('#confirmPassword').val();
+
+                let formData = new FormData();
+                formData.append('name', $('#name').val());
+                formData.append('email', $('#emailSignup').val());
+                formData.append('password', $('#passwordSignup').val());
+                formData.append('password_confirmation', $('#confirmPassword').val());
+
+                const profilePic = $('#profilePic')[0].files[0];
+                if (profilePic) {
+                    formData.append('profile_pic', profilePic); // Add profile picture to form data
+                }
 
                 $.ajax({
                     url: '{{ route('signup') }}', // This route will point to signup processing
                     method: 'POST',
-                    data: {
-                        _token: '{{ csrf_token() }}',
-                        name: name,
-                        email: email,
-                        password: password,
-                        password_confirmation: confirmPassword
+                    data: formData,
+                    contentType: false,
+                    processData: false,
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
                     },
                     success: function(response) {
                         toastr.success(response.message);
