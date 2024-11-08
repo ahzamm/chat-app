@@ -5,14 +5,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WhatsApp-Like Chat Interface</title>
-    <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-    <!-- Font Awesome for Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css">
-    <!-- Toastr CSS -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
     <style>
-        /* Custom CSS */
         :root {
             --primary-bg: #e5ddd5;
             --chat-bg: #f0f0f0;
@@ -41,7 +37,6 @@
             display: flex;
         }
 
-        /* Sidebar Styling */
         .contacts-list {
             background-color: var(--chat-bg);
             overflow-y: auto;
@@ -64,7 +59,6 @@
 
         body.dark-mode .contact-item:hover {
             background-color: var(--hover-bg-dark);
-            /* Darker hover background for dark mode */
         }
 
         .contact-item img {
@@ -74,7 +68,6 @@
             margin-right: 10px;
         }
 
-        /* Header with Profile and Logout */
         .sidebar-header {
             display: flex;
             align-items: center;
@@ -94,7 +87,6 @@
             margin-left: auto;
         }
 
-        /* Chat Window Styling */
         .chat-window {
             flex: 1;
             display: flex;
@@ -122,7 +114,6 @@
             position: relative;
             clear: both;
             color: var(--text-color);
-            /* Text color adjusted based on theme */
         }
 
         .message.sent {
@@ -136,7 +127,6 @@
             float: left;
         }
 
-        /* Chat Footer */
         .chat-footer input {
             width: calc(100% - 40px);
             margin-right: 10px;
@@ -151,16 +141,13 @@
 <body>
 
     <div class="container-fluid chat-container">
-        <!-- Contacts Sidebar -->
         <div class="col-md-3 contacts-list">
-            <!-- Sidebar Header -->
             <div class="sidebar-header">
                 <img src="https://via.placeholder.com/45" alt="Profile Picture">
                 <span><strong></strong></span>
                 <button class="btn btn-light btn-sm logout-btn" onclick="logout()"><i class="fas fa-sign-out-alt"></i></button>
             </div>
 
-            <!-- Add Contact Field -->
             <div class="p-2">
                 <input type="text" id="newContact" class="form-control" placeholder="Add new contact">
                 <button class="btn btn-success btn-sm mt-1 w-100" onclick="addContact()">Add</button>
@@ -185,20 +172,15 @@
             <div id="dynamic-contacts"></div>
         </div>
 
-        <!-- Chat Window -->
         <div class="col-md-9 chat-window">
-            <!-- Chat Header -->
             <div class="chat-header d-flex justify-content-between align-items-center">
                 <h5 id="chatWith">Chat with: Select a contact</h5>
                 <button class="btn btn-sm btn-light" onclick="toggleDarkMode()">Dark Mode</button>
             </div>
 
-            <!-- Chat Messages Area -->
             <div class="chat-messages" id="chatMessages">
-                <!-- Messages will appear here dynamically -->
             </div>
 
-            <!-- Chat Footer -->
             <div class="chat-footer d-flex align-items-center">
                 <input type="text" id="messageInput" placeholder="Type a message...">
                 <button class="btn btn-primary" onclick="sendMessage()">
@@ -208,33 +190,50 @@
         </div>
     </div>
 
-    <!-- jQuery and Bootstrap Bundle (including Popper) -->
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
 
     <script>
         fetchContacts()
-        let currentChatUser = '';
+        let currentChatUserName = '';
+        let currentChatUserId = '';
 
-        function openChat(contactName) {
-            currentChatUser = contactName;
-            $('#chatWith').text('Chat with: ' + contactName);
-            $('#chatMessages').empty();
-        }
 
         function sendMessage() {
+            console.log('user id is : ', currentChatUserId);
             const messageText = $('#messageInput').val().trim();
-            if (messageText === '' || currentChatUser === '') return;
+            if (messageText === '' || currentChatUserId === '') return;
 
-            $('#chatMessages').append(`<div class="message sent">${messageText}</div>`);
-            $('#messageInput').val('');
-            $('#chatMessages').scrollTop($('#chatMessages')[0].scrollHeight);
+            $.ajax({
+                url: '{{ route('send.message') }}',
+                method: 'POST',
+                data: {
+                    receiver_id: currentChatUserId,
+                    message: messageText,
+                    _token: '{{ csrf_token() }}'
+                },
+                success: function(response) {
+                    $('#chatMessages').append(`<div class="message sent">${messageText}</div>`);
+                    $('#messageInput').val('');
+                    $('#chatMessages').scrollTop($('#chatMessages')[0].scrollHeight);
+                    setTimeout(() => {
+                        $('#chatMessages').append(`<div class="message received">Reply to: ${messageText}</div>`);
+                        $('#chatMessages').scrollTop($('#chatMessages')[0].scrollHeight);
+                    }, 1000);
+                },
+                error: function(xhr) {
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        toastr.error(xhr.responseJSON.message);
+                    } else if (xhr.responseText) {
+                        toastr.error(xhr.responseText);
+                    } else {
+                        toastr.error('An unknown error occurred.');
+                    }
+                    console.error(xhr);
+                }
 
-            setTimeout(() => {
-                $('#chatMessages').append(`<div class="message received">Reply to: ${messageText}</div>`);
-                $('#chatMessages').scrollTop($('#chatMessages')[0].scrollHeight);
-            }, 1000);
+            });
         }
 
         function addContact() {
@@ -256,7 +255,7 @@
 
                     fetchContacts()
 
-                    $('#newContact').val(''); // Clear the input field
+                    $('#newContact').val('');
                 },
                 error: function(xhr) {
                     const error = xhr.responseJSON.message || 'Error adding contact';
@@ -311,8 +310,9 @@
                 method: 'GET',
                 success: function(contacts) {
                     contacts.forEach(contact => {
+                        console.log('contact id in fetch contact function is : ',contact.id);
                         $('#dynamic-contacts').append(`
-                            <div class="contact-item" onclick="openChat('${contact.name}')">
+                            <div class="contact-item" data-id="${contact.id}" onclick="openChat('${contact.name}', ${contact.id})">
                                 <img src="${contact.profile_pic}" alt="User Image">
                                 <div>
                                     <div class="contact-name">${contact.name}</div>
@@ -326,6 +326,15 @@
                 }
             });
         }
+
+        function openChat(contactName, contactId) {
+            console.log('openchat contact id is ', contactId);
+            currentChatUserName = contactName;
+            currentChatUserId = contactId;
+            $('#chatWith').text('Chat with: ' + contactName);
+            $('#chatMessages').empty();
+        }
+
 
         function toggleDarkMode() {
             $('body').toggleClass('dark-mode');

@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User;
 use App\Models\Contact;
+use App\Models\Message;
 
 class HomeController extends Controller
 {
@@ -66,13 +67,29 @@ class HomeController extends Controller
 
         $formattedContacts = $contacts->map(function ($contact) {
             return [
-                'id'          => $contact->id,
+                'id'          => $contact->user_id,
                 'name'        => $contact->name,
                 'profile_pic' => $contact->profile_pic ? asset('storage/' . $contact->profile_pic) : 'https://via.placeholder.com/40',
             ];
         });
 
         return response()->json($formattedContacts);
+    }
+
+    public function sendMessage(Request $request)
+    {
+        $request->validate([
+            'receiver_id' => 'required|exists:users,id',
+            'message'     => 'required|string',
+        ]);
+
+        $message = Message::create([
+            'sender_id'   => Auth::id(),
+            'receiver_id' => $request->receiver_id,
+            'message'     => $request->message,
+        ]);
+
+        return response()->json(['message' => 'Message sent successfully!', 'data' => $message]);
     }
 
 }
