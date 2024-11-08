@@ -17,4 +17,6 @@ Route::middleware('auth')->group(function () {
     Route::post('/add-contact' , [HomeController::class, 'addContact'])->name('add.contact');
     Route::get('/user/contacts', [HomeController::class, 'getContacts'])->name('user.contacts');
     Route::post('/send-message', [HomeController::class, 'sendMessage'])->name('send.message');
+    Route::post('/get-messages', [HomeController::class, 'getMessages'])->name('get.messages');
+
 });

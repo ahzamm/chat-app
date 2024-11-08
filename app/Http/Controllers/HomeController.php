@@ -92,4 +92,26 @@ class HomeController extends Controller
         return response()->json(['message' => 'Message sent successfully!', 'data' => $message]);
     }
 
+
+    public function getMessages(Request $request)
+    {
+        $request->validate([
+            'contact_id' => 'required|exists:users,id',
+        ]);
+
+        $userId = Auth::id();
+        $contactId = $request->contact_id;
+
+        $messages = Message::where(function ($query) use ($userId, $contactId) {
+            $query->where('sender_id', $userId)->where('receiver_id', $contactId);
+        })
+        ->orWhere(function ($query) use ($userId, $contactId) {
+            $query->where('sender_id', $contactId)->where('receiver_id', $userId);
+        })
+        ->orderBy('created_at', 'asc')
+        ->get();
+
+        return response()->json($messages);
+    }
+
 }

@@ -201,7 +201,6 @@
 
 
         function sendMessage() {
-            console.log('user id is : ', currentChatUserId);
             const messageText = $('#messageInput').val().trim();
             if (messageText === '' || currentChatUserId === '') return;
 
@@ -217,22 +216,11 @@
                     $('#chatMessages').append(`<div class="message sent">${messageText}</div>`);
                     $('#messageInput').val('');
                     $('#chatMessages').scrollTop($('#chatMessages')[0].scrollHeight);
-                    setTimeout(() => {
-                        $('#chatMessages').append(`<div class="message received">Reply to: ${messageText}</div>`);
-                        $('#chatMessages').scrollTop($('#chatMessages')[0].scrollHeight);
-                    }, 1000);
                 },
                 error: function(xhr) {
-                    if (xhr.responseJSON && xhr.responseJSON.message) {
-                        toastr.error(xhr.responseJSON.message);
-                    } else if (xhr.responseText) {
-                        toastr.error(xhr.responseText);
-                    } else {
-                        toastr.error('An unknown error occurred.');
-                    }
-                    console.error(xhr);
+                    toastr.error('Failed to send message');
+                    console.error(xhr.responseText);
                 }
-
             });
         }
 
@@ -328,12 +316,36 @@
         }
 
         function openChat(contactName, contactId) {
-            console.log('openchat contact id is ', contactId);
             currentChatUserName = contactName;
             currentChatUserId = contactId;
+
             $('#chatWith').text('Chat with: ' + contactName);
             $('#chatMessages').empty();
+
+            $.ajax({
+                url: '{{ route('get.messages') }}',
+                method: 'POST',
+                data: {
+                    contact_id: contactId,
+                    _token: '{{ csrf_token() }}'
+                },
+                success: function(messages) {
+                    messages.forEach(message => {
+                        const messageClass = message.sender_id === currentChatUserId ? 'received' : 'sent';
+                        $('#chatMessages').append(`
+                            <div class="message ${messageClass}">${message.message}</div>
+                        `);
+                    });
+
+                    $('#chatMessages').scrollTop($('#chatMessages')[0].scrollHeight);
+                },
+                error: function(xhr) {
+                    toastr.error('Failed to load messages');
+                    console.error(xhr.responseText);
+                }
+            });
         }
+
 
 
         function toggleDarkMode() {
