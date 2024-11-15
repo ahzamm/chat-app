@@ -193,32 +193,12 @@
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
-    <!-- <script src="{{ asset('ws.js') }}"></script> -->
-     <!-- <script src="recource/js/bootstrap.js"></script> -->
-     <!-- <script src="{{ asset('bootstrap.js') }}"></script> -->
      @vite('resources/js/app.js')
-
-
-
-
-
 
     <script>
         fetchContacts()
         let currentChatUserName = '';
         let currentChatUserId = '';
-
-        console.log(window.Echo);
-
-        // Echo.private(`chat.${currentChatUserId}`)
-        //             .listen('.message.sent', (event) => {
-        //                 console.log('event is ', event);
-        //                 const messageClass = event.sender_id === currentChatUserId ? 'received' : 'sent';
-        //                 $('#chatMessages').append(`
-        //                     <div class="message ${messageClass}">${event.message}</div>
-        //                 `);
-        //                 $('#chatMessages').scrollTop($('#chatMessages')[0].scrollHeight);
-        //             });
 
         function sendMessage() {
             const messageText = $('#messageInput').val().trim();
@@ -233,30 +213,15 @@
                     _token: '{{ csrf_token() }}'
                 },
                 success: function(response) {
-                    // $('#chatMessages').append(`<div class="message sent">${messageText}</div>`);
                     $('#messageInput').val('');
                     $('#chatMessages').append(`<div class="message sent">${messageText}</div>`);
                     $('#chatMessages').scrollTop($('#chatMessages')[0].scrollHeight);
-                    // $('#chatMessages').scrollTop($('#chatMessages')[0].scrollHeight);
-                    
-                    // window.Echo.private(`chat.${currentChatUserId}`)
-                    // .listen('.message.sent', (event) => {
-                    //     console.log('event is ', event);
-                    //     const messageClass = event.sender_id === currentChatUserId ? 'received' : 'sent';
-                    //     $('#chatMessages').append(`
-                    //         <div class="message ${messageClass}">${event.message}</div>
-                    //     `);
-                    //     $('#chatMessages').scrollTop($('#chatMessages')[0].scrollHeight);
-                    // });
-
-
                 },
                 error: function(xhr) {
                     toastr.error('Failed to send message');
                     console.error(xhr.responseText);
                 }
             });
-
             
         }
 
@@ -363,18 +328,9 @@
 
             window.Echo.private(`chat.${currentUserId}`)
                 .listen('.message.sent', (event) => {
-                    console.log('Message event received:', event);
-
-                    // Determine if the message is sent or received
-                    const messageClass = event.sender_id === currentUserId ? 'sent' : 'received';
-
-                    $('#chatMessages').append(`
-                        <div class="message ${messageClass}">${event.message}</div>
-                    `);
-
+                    $('#chatMessages').append(`<div class="message received">${event.message}</div>`);
                     $('#chatMessages').scrollTop($('#chatMessages')[0].scrollHeight);
                 });
-
 
             $.ajax({
                 url: '{{ route('get.messages') }}',
