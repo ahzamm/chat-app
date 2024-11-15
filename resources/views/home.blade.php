@@ -297,6 +297,8 @@
             $('#chatWith').text('Chat with: ' + contactName);
             $('#chatMessages').empty();
 
+            window.Echo.private(`chat.${currentUserId}`).stopListening('.message.sent');
+
             window.Echo.private(`chat.${currentUserId}`)
             .listen('.message.sent', (event) => {
                 if(event.receiver_id==currentUserId){
