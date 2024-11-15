@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User;
 use App\Models\Contact;
+use App\Events\MessageSent;
 use App\Models\Message;
 
 class HomeController extends Controller
@@ -88,6 +89,8 @@ class HomeController extends Controller
             'receiver_id' => $request->receiver_id,
             'message'     => $request->message,
         ]);
+
+        broadcast(new MessageSent($message));
 
         return response()->json(['message' => 'Message sent successfully!', 'data' => $message]);
     }
