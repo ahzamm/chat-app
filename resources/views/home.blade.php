@@ -137,9 +137,7 @@
         }
     </style>
 </head>
-
 <body>
-
     <div class="container-fluid chat-container">
         <div class="col-md-3 contacts-list">
             <div class="sidebar-header">
@@ -147,40 +145,19 @@
                 <span><strong></strong></span>
                 <button class="btn btn-light btn-sm logout-btn" onclick="logout()"><i class="fas fa-sign-out-alt"></i></button>
             </div>
-
             <div class="p-2">
                 <input type="text" id="newContact" class="form-control" placeholder="Add new contact">
                 <button class="btn btn-success btn-sm mt-1 w-100" onclick="addContact()">Add</button>
             </div>
-
-            <!-- Contacts List -->
-            {{-- <div class="contact-item" onclick="openChat('John Doe')">
-                <img src="https://via.placeholder.com/40" alt="User Image">
-                <div>
-                    <div class="contact-name">John Doe</div>
-                    <small>Last message...</small>
-                </div>
-            </div>
-            <div class="contact-item" onclick="openChat('Ahzam Ahmed')">
-                <img src="https://via.placeholder.com/40" alt="User Image">
-                <div>
-                    <div class="contact-name">Ahzam Ahmed</div>
-                    <small>Asslam-o-Alakum...</small>
-                </div>
-            </div> --}}
-
             <div id="dynamic-contacts"></div>
         </div>
-
         <div class="col-md-9 chat-window">
             <div class="chat-header d-flex justify-content-between align-items-center">
                 <h5 id="chatWith">Chat with: Select a contact</h5>
                 <button class="btn btn-sm btn-light" onclick="toggleDarkMode()">Dark Mode</button>
             </div>
-
             <div class="chat-messages" id="chatMessages">
             </div>
-
             <div class="chat-footer d-flex align-items-center">
                 <input type="text" id="messageInput" placeholder="Type a message...">
                 <button class="btn btn-primary" onclick="sendMessage()">
@@ -189,12 +166,10 @@
             </div>
         </div>
     </div>
-
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
      @vite('resources/js/app.js')
-
     <script>
         fetchContacts()
         let currentChatUserName = '';
@@ -222,7 +197,6 @@
                     console.error(xhr.responseText);
                 }
             });
-            
         }
 
         function addContact() {
@@ -252,7 +226,6 @@
                 }
             });
         }
-
 
         function logout() {
             if (confirm('Are you sure you want to log out?')) {
@@ -323,9 +296,7 @@
             $('#chatWith').text('Chat with: ' + contactName);
             $('#chatMessages').empty();
 
-
             let currentUserId = '{{ auth()->id() }}';
-
             window.Echo.private(`chat.${currentUserId}`)
                 .listen('.message.sent', (event) => {
                     $('#chatMessages').append(`<div class="message received">${event.message}</div>`);
@@ -355,8 +326,6 @@
                 }
             });
         }
-
-
 
         function toggleDarkMode() {
             $('body').toggleClass('dark-mode');
