@@ -290,18 +290,20 @@
         }
 
         function openChat(contactName, contactId) {
-            currentChatUserName = contactName;
-            currentChatUserId = contactId;
+                currentChatUserName = contactName;
+                currentChatUserId   = contactId;
+            let currentUserId       = '{{ auth()->id() }}';
 
             $('#chatWith').text('Chat with: ' + contactName);
             $('#chatMessages').empty();
 
-            let currentUserId = '{{ auth()->id() }}';
             window.Echo.private(`chat.${currentUserId}`)
-                .listen('.message.sent', (event) => {
+            .listen('.message.sent', (event) => {
+                if(event.receiver_id==currentUserId){
                     $('#chatMessages').append(`<div class="message received">${event.message}</div>`);
                     $('#chatMessages').scrollTop($('#chatMessages')[0].scrollHeight);
-                });
+                }
+            });
 
             $.ajax({
                 url: '{{ route('get.messages') }}',

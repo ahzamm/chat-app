@@ -8,5 +8,5 @@ Broadcast::channel('App.Models.User.{id}', function ($user, $id) {
 
 
 Broadcast::channel('chat.{receiverId}', function ($user, $receiverId) {
-    return (int) $user->id === (int) $receiverId || $user->contacts()->where('contact_id', $receiverId)->exists();
+    return (int) $user->id === (int) $receiverId;
 });
