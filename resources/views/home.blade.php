@@ -360,12 +360,11 @@
             $('#dynamic-contacts').empty();
 
             $.ajax({
-                url: '{{ route('user.contacts.and.groups') }}', // Update this route
+                url: '{{ route('user.contacts.and.groups') }}',
                 method: 'GET',
                 success: function(data) {
                     const { contacts, groups } = data;
 
-                    // Render individual contacts
                     contacts.forEach(contact => {
                         $('#dynamic-contacts').append(`
                             <div class="contact-item" data-id="${contact.id}" onclick="openChat('${contact.name}', ${contact.id})">
@@ -377,7 +376,6 @@
                         `);
                     });
 
-                    // Render groups
                     groups.forEach(group => {
                         $('#dynamic-contacts').append(`
                             <div class="contact-item group-item" data-id="${group.id}" onclick="openGroupChat('${group.name}', ${group.id})">
@@ -443,7 +441,6 @@
 
             let currentUserId = '{{ auth()->id() }}';
 
-            // Listen for group messages
             window.Echo.private(`group.${groupId}`).stopListening('.message.sent');
             window.Echo.private(`group.${groupId}`)
                 .listen('.message.sent', (event) => {
@@ -451,7 +448,6 @@
                     $('#chatMessages').scrollTop($('#chatMessages')[0].scrollHeight);
                 });
 
-            // Fetch group messages
             $.ajax({
                 url: '{{ route('get.group.messages') }}',
                 method: 'POST',
@@ -537,9 +533,8 @@
             }
         }
 
-        // Simulate notifications update
         setInterval(() => {
-            const count = Math.floor(Math.random() * 10); // Replace with actual API call
+            const count = Math.floor(Math.random() * 10);
             updateNotificationCount(count);
         }, 5000);
 
@@ -574,10 +569,20 @@
         }
 
         function markAllAsRead() {
-           
+            $.ajax({
+                url: '#',
+                method: 'POST',
+                data: { _token: '{{ csrf_token() }}' },
+                success: function () {
+                    updateNotificationDropdown([]);
+                    toastr.success('All notifications marked as read.');
+                },
+                error: function () {
+                    toastr.error('Failed to mark notifications as read.');
+                }
+            });
         }
 
-        // Simulated notifications fetch (Replace this with API call)
         function fetchNotifications() {
             const exampleNotifications = [
                 { message: 'New message from John', link: '/chat/john' },
@@ -588,10 +593,8 @@
             updateNotificationDropdown(exampleNotifications);
         }
 
-        // Fetch notifications on load
         fetchNotifications();
 
-        // Periodically fetch new notifications
         setInterval(fetchNotifications, 10000);
 
 

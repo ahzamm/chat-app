@@ -123,32 +123,31 @@ class HomeController extends Controller
     public function createGroup(Request $request)
     {
         $request->validate([
-            'name' => 'required|string|max:255',
-            'members' => 'required|array',
+            'name'      => 'required|string|max:255',
+            'members'   => 'required|array',
             'members.*' => 'exists:users,id',
         ]);
 
         $group = Group::create([
-            'name' => $request->name,
+            'name'       => $request->name,
             'created_by' => Auth::id(),
         ]);
 
         GroupMember::create([
             'group_id' => $group->id,
-            'user_id' => Auth::id(),
+            'user_id'  => Auth::id(),
         ]);
 
         foreach ($request->members as $memberId) {
             GroupMember::create([
                 'group_id' => $group->id,
-                'user_id' => $memberId,
+                'user_id'  => $memberId,
             ]);
 
-            // Notify member about the group
             $message = new Message([
-                'sender_id' => Auth::id(),
+                'sender_id'   => Auth::id(),
                 'receiver_id' => $memberId,
-                'message' => Auth::user()->name . ' added you to the group "' . $group->name . '".',
+                'message'     => Auth::user()->name . ' added you to the group "' . $group->name . '".',
             ]);
             $message->save();
 
@@ -162,7 +161,6 @@ class HomeController extends Controller
     {
         $user = Auth::user();
 
-        // Fetch individual contacts
         $contacts = $user->contactUsers()
             ->select('users.id as user_id', 'users.name', 'users.profile_pic')
             ->orderBy('contacts.created_at', 'desc')
@@ -175,7 +173,6 @@ class HomeController extends Controller
                 ];
             });
 
-        // Fetch groups the user is part of
         $groups = GroupMember::where('user_id', $user->id)
             ->with('group')
             ->get()
