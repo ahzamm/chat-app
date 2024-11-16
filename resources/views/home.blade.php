@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css"/>
     <style>
         :root {
             --primary-bg: #e5ddd5;
@@ -135,6 +136,48 @@
             padding: 10px 15px;
             box-shadow: 0 1px 5px rgba(0, 0, 0, 0.1);
         }
+
+        .notification-container {
+            position: relative;
+        }
+
+        #notificationIcon {
+            border: none;
+            background: none;
+            cursor: pointer;
+        }
+
+        #notificationCount {
+            font-size: 0.75rem;
+            padding: 0.25em 0.5em;
+            border-radius: 50%;
+            line-height: 1;
+        }
+
+        #notificationItems {
+            max-height: 200px;
+            overflow-y: auto;
+            width: 250px;
+        }
+
+        .dropdown-menu {
+            font-size: 0.9rem;
+            background-color: var(--chat-bg);
+            color: var(--text-color);
+        }
+
+        .dropdown-menu .dropdown-item:hover {
+            background-color: var(--hover-bg-light);
+        }
+
+        body.dark-mode .dropdown-menu {
+            background-color: var(--received-bg);
+            color: var(--text-color);
+        }
+
+        body.dark-mode .dropdown-menu .dropdown-item:hover {
+            background-color: var(--hover-bg-dark);
+        }
     </style>
 </head>
 <body>
@@ -143,7 +186,23 @@
             <div class="sidebar-header">
                 <img src="https://via.placeholder.com/45" alt="Profile Picture">
                 <span><strong></strong></span>
+                <div class="dropdown ml-auto">
+                    <button class="btn btn-light position-relative dropdown-toggle" id="notificationIcon" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        <i class="fas fa-bell"></i>
+                        <span class="badge badge-danger position-absolute top-0 start-100 translate-middle" id="notificationCount">0</span>
+                    </button>
+                    <div class="dropdown-menu dropdown-menu-right" aria-labelledby="notificationIcon" id="notificationDropdown">
+                        <div id="notificationItems" style="max-height: 200px; overflow-y: auto;">
+                            <span class="dropdown-item">No new notifications</span>
+                        </div>
+                        <div class="dropdown-divider"></div>
+                        <button class="dropdown-item text-center text-primary" onclick="markAllAsRead()">Mark all as read</button>
+                    </div>
+                </div>
                 <button class="btn btn-light btn-sm logout-btn" onclick="logout()"><i class="fas fa-sign-out-alt"></i></button>
+            </div>          
+            <div class="p-2">
+                <button class="btn btn-primary btn-sm w-100" data-toggle="modal" data-target="#createGroupModal">Create Group</button>
             </div>
             <div class="p-2">
                 <input type="text" id="newContact" class="form-control" placeholder="Add new contact">
@@ -166,9 +225,42 @@
             </div>
         </div>
     </div>
+    <div class="modal fade" id="createGroupModal" tabindex="-1" aria-labelledby="createGroupModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="createGroupModalLabel">Create Group</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form id="createGroupForm">
+                        <div class="form-group">
+                            <label for="groupImage">Group Profile Picture</label>
+                            <input type="file" class="form-control" id="groupImage" accept="image/*">
+                        </div>                        
+                        <div class="form-group">
+                            <label for="groupName">Group Name</label>
+                            <input type="text" class="form-control" id="groupName" placeholder="Enter group name" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="groupMembers">Add Members</label>
+                            <select class="form-control" id="groupMembers" multiple="multiple" style="width: 100%;"></select>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="createGroup()">Create Group</button>
+                </div>
+            </div>
+        </div>
+    </div>
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script>
      @vite('resources/js/app.js')
     <script>
         fetchContacts()
@@ -268,11 +360,13 @@
             $('#dynamic-contacts').empty();
 
             $.ajax({
-                url: '{{ route('user.contacts') }}',
+                url: '{{ route('user.contacts.and.groups') }}', // Update this route
                 method: 'GET',
-                success: function(contacts) {
+                success: function(data) {
+                    const { contacts, groups } = data;
+
+                    // Render individual contacts
                     contacts.forEach(contact => {
-                        console.log('contact id in fetch contact function is : ',contact.id);
                         $('#dynamic-contacts').append(`
                             <div class="contact-item" data-id="${contact.id}" onclick="openChat('${contact.name}', ${contact.id})">
                                 <img src="${contact.profile_pic}" alt="User Image">
@@ -282,9 +376,21 @@
                             </div>
                         `);
                     });
+
+                    // Render groups
+                    groups.forEach(group => {
+                        $('#dynamic-contacts').append(`
+                            <div class="contact-item group-item" data-id="${group.id}" onclick="openGroupChat('${group.name}', ${group.id})">
+                                <img src="https://via.placeholder.com/40?text=Group" alt="Group Icon">
+                                <div>
+                                    <div class="contact-name">${group.name}</div>
+                                </div>
+                            </div>
+                        `);
+                    });
                 },
                 error: function() {
-                    console.error('Could not retrieve contacts');
+                    console.error('Could not retrieve contacts and groups');
                 }
             });
         }
@@ -331,9 +437,164 @@
             });
         }
 
+        function openGroupChat(groupName, groupId) {
+            $('#chatWith').text('Group Chat: ' + groupName);
+            $('#chatMessages').empty();
+
+            let currentUserId = '{{ auth()->id() }}';
+
+            // Listen for group messages
+            window.Echo.private(`group.${groupId}`).stopListening('.message.sent');
+            window.Echo.private(`group.${groupId}`)
+                .listen('.message.sent', (event) => {
+                    $('#chatMessages').append(`<div class="message received">${event.message}</div>`);
+                    $('#chatMessages').scrollTop($('#chatMessages')[0].scrollHeight);
+                });
+
+            // Fetch group messages
+            $.ajax({
+                url: '{{ route('get.group.messages') }}',
+                method: 'POST',
+                data: {
+                    group_id: groupId,
+                    _token: '{{ csrf_token() }}'
+                },
+                success: function(messages) {
+                    messages.forEach(message => {
+                        const messageClass = message.sender_id === currentUserId ? 'sent' : 'received';
+                        $('#chatMessages').append(`
+                            <div class="message ${messageClass}">${message.message}</div>
+                        `);
+                    });
+
+                    $('#chatMessages').scrollTop($('#chatMessages')[0].scrollHeight);
+                },
+                error: function(xhr) {
+                    toastr.error('Failed to load group messages');
+                    console.error(xhr.responseText);
+                }
+            });
+        }
+
         function toggleDarkMode() {
             $('body').toggleClass('dark-mode');
         }
+
+        $('#groupMembers').select2({
+            placeholder: 'Select members',
+            allowClear: true,
+            ajax: {
+                url: '{{ route('user.contacts') }}',
+                method: 'GET',
+                dataType: 'json',
+                processResults: function (data) {
+                    return {
+                        results: data.map(contact => ({
+                            id: contact.id,
+                            text: `${contact.name} (${contact.email})`
+                        }))
+                    };
+                }
+            }
+        });
+
+        function createGroup() {
+            const groupName = $('#groupName').val().trim();
+            const memberIds = $('#groupMembers').val();
+
+            if (!groupName || !memberIds.length) {
+                toastr.error('Please enter a group name and select members.');
+                return;
+            }
+
+            $.ajax({
+                url: '{{ route('create.group') }}',
+                method: 'POST',
+                data: {
+                    name: groupName,
+                    members: memberIds,
+                    _token: '{{ csrf_token() }}'
+                },
+                success: function(response) {
+                    $('#createGroupModal').modal('hide');
+                    toastr.success(response.message);
+                },
+                error: function(xhr) {
+                    toastr.error('Failed to create group. Please try again.');
+                    console.error(xhr.responseText);
+                }
+            });
+        }
+
+        function updateNotificationCount(count) {
+            const badge = $('#notificationCount');
+            badge.text(count);
+
+            if (count > 0) {
+                badge.show();
+            } else {
+                badge.hide();
+            }
+        }
+
+        // Simulate notifications update
+        setInterval(() => {
+            const count = Math.floor(Math.random() * 10); // Replace with actual API call
+            updateNotificationCount(count);
+        }, 5000);
+
+        function updateNotificationDropdown(notifications) {
+            const notificationItems = $('#notificationItems');
+            notificationItems.empty();
+
+            if (notifications.length === 0) {
+                notificationItems.append('<span class="dropdown-item">No new notifications</span>');
+            } else {
+                notifications.forEach(notification => {
+                    notificationItems.append(`
+                        <a href="${notification.link}" class="dropdown-item">
+                            ${notification.message}
+                        </a>
+                    `);
+                });
+            }
+
+            updateNotificationCount(notifications.length);
+        }
+
+        function updateNotificationCount(count) {
+            const badge = $('#notificationCount');
+            badge.text(count);
+
+            if (count > 0) {
+                badge.show();
+            } else {
+                badge.hide();
+            }
+        }
+
+        function markAllAsRead() {
+           
+        }
+
+        // Simulated notifications fetch (Replace this with API call)
+        function fetchNotifications() {
+            const exampleNotifications = [
+                { message: 'New message from John', link: '/chat/john' },
+                { message: 'Your group project is due tomorrow', link: '/tasks' },
+                { message: 'Alice commented on your post', link: '/comments' }
+            ];
+
+            updateNotificationDropdown(exampleNotifications);
+        }
+
+        // Fetch notifications on load
+        fetchNotifications();
+
+        // Periodically fetch new notifications
+        setInterval(fetchNotifications, 10000);
+
+
     </script>
 
 </body>

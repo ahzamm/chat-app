@@ -20,8 +20,13 @@ class MessageSent implements ShouldBroadcast
 
     public function broadcastOn()
     {
+        if ($this->message->group_id) {
+            return new PrivateChannel('group.' . $this->message->group_id);
+        }
+
         return new PrivateChannel('chat.' . $this->message->receiver_id);
     }
+
 
     public function broadcastWith()
     {

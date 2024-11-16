@@ -8,6 +8,9 @@ use App\Models\User;
 use App\Models\Contact;
 use App\Events\MessageSent;
 use App\Models\Message;
+use App\Models\Group;
+use App\Models\GroupMember;
+
 
 class HomeController extends Controller
 {
@@ -117,4 +120,88 @@ class HomeController extends Controller
         return response()->json($messages);
     }
 
+    public function createGroup(Request $request)
+    {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'members' => 'required|array',
+            'members.*' => 'exists:users,id',
+        ]);
+
+        $group = Group::create([
+            'name' => $request->name,
+            'created_by' => Auth::id(),
+        ]);
+
+        GroupMember::create([
+            'group_id' => $group->id,
+            'user_id' => Auth::id(),
+        ]);
+
+        foreach ($request->members as $memberId) {
+            GroupMember::create([
+                'group_id' => $group->id,
+                'user_id' => $memberId,
+            ]);
+
+            // Notify member about the group
+            $message = new Message([
+                'sender_id' => Auth::id(),
+                'receiver_id' => $memberId,
+                'message' => Auth::user()->name . ' added you to the group "' . $group->name . '".',
+            ]);
+            $message->save();
+
+            broadcast(new MessageSent($message));
+        }
+
+        return response()->json(['message' => 'Group created successfully!']);
+    }
+
+    public function getContactsAndGroups()
+    {
+        $user = Auth::user();
+
+        // Fetch individual contacts
+        $contacts = $user->contactUsers()
+            ->select('users.id as user_id', 'users.name', 'users.profile_pic')
+            ->orderBy('contacts.created_at', 'desc')
+            ->get()
+            ->map(function ($contact) {
+                return [
+                    'id'          => $contact->user_id,
+                    'name'        => $contact->name,
+                    'profile_pic' => $contact->profile_pic ? asset('storage/' . $contact->profile_pic) : 'https://via.placeholder.com/40',
+                ];
+            });
+
+        // Fetch groups the user is part of
+        $groups = GroupMember::where('user_id', $user->id)
+            ->with('group')
+            ->get()
+            ->map(function ($groupMember) {
+                return [
+                    'id'   => $groupMember->group->id,
+                    'name' => $groupMember->group->name,
+                ];
+            });
+
+        return response()->json([
+            'contacts' => $contacts,
+            'groups' => $groups,
+        ]);
+    }
+
+    public function getGroupMessages(Request $request)
+    {
+        $request->validate([
+            'group_id' => 'required|exists:groups,id',
+        ]);
+
+        $messages = Message::where('group_id', $request->group_id)
+            ->orderBy('created_at', 'asc')
+            ->get();
+
+        return response()->json($messages);
+    }
 }
