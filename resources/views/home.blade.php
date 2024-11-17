@@ -265,7 +265,8 @@
     <script>
         fetchContacts()
         let currentChatUserName = '';
-        let currentChatUserId = '';
+        let currentChatUserId   = '';
+        let currentUserId       = '{{ auth()->id() }}';
 
         function sendMessage() {
             const messageText = $('#messageInput').val().trim();
@@ -439,8 +440,6 @@
             $('#chatWith').text('Group Chat: ' + groupName);
             $('#chatMessages').empty();
 
-            let currentUserId = '{{ auth()->id() }}';
-
             window.Echo.private(`group.${groupId}`).stopListening('.message.sent');
             window.Echo.private(`group.${groupId}`)
                 .listen('.message.sent', (event) => {
@@ -493,6 +492,15 @@
                 }
             }
         });
+
+        setTimeout(() => {
+            window.Echo.private(`group.create.${currentUserId}`)
+            .listen('.group.create', (event) => {
+                toastr.success(event.group.name + ' has been created, and you have been added!');
+                fetchContacts();
+            });
+
+          }, 4000);
 
         function createGroup() {
             const groupName = $('#groupName').val().trim();

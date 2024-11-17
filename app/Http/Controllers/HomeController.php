@@ -6,11 +6,12 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User;
 use App\Models\Contact;
-use App\Events\MessageSent;
 use App\Models\Message;
 use App\Models\Group;
 use App\Models\GroupMember;
-
+use App\Events\MessageSent;
+use App\Events\GroupCreate;
+use App\Models\Notification;
 
 class HomeController extends Controller
 {
@@ -98,7 +99,6 @@ class HomeController extends Controller
         return response()->json(['message' => 'Message sent successfully!', 'data' => $message]);
     }
 
-
     public function getMessages(Request $request)
     {
         $request->validate([
@@ -144,14 +144,12 @@ class HomeController extends Controller
                 'user_id'  => $memberId,
             ]);
 
-            $message = new Message([
-                'sender_id'   => Auth::id(),
-                'receiver_id' => $memberId,
-                'message'     => Auth::user()->name . ' added you to the group "' . $group->name . '".',
+            Notification::create([
+                'user_id' => $memberId,
+                'text' => Auth::id() . ' Added you in group ' . $group->name
             ]);
-            $message->save();
 
-            broadcast(new MessageSent($message));
+            broadcast(new GroupCreate(Group::with('members')->find($group->id)));
         }
 
         return response()->json(['message' => 'Group created successfully!']);
