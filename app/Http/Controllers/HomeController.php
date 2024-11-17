@@ -145,7 +145,7 @@ class HomeController extends Controller
             ]);
 
             $username = Auth::user()->name;
-            $notification_message = $username . 'added you in group ' . $group->name;
+            $notification_message = $username . ' added you in group ' . $group->name;
 
             Notification::create([
                 'user_id' => $memberId,
@@ -153,8 +153,9 @@ class HomeController extends Controller
                 'is_read' => 0
             ]);
 
-            broadcast(new GroupCreate(Group::with('members')->find($group->id), $notification_message));
         }
+
+        broadcast(new GroupCreate(Group::with('members')->find($group->id), $notification_message));
 
         return response()->json(['message' => 'Group created successfully!']);
     }

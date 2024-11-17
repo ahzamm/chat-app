@@ -496,6 +496,7 @@
         setTimeout(() => {
             window.Echo.private(`group.create.${currentUserId}`)
                 .listen('.group.create', (event) => {
+                    console.log(event.message);
                     const notificationCountElement = $('#notificationCount');
                     let   currentCount             = parseInt(notificationCountElement.text()) || 0;
 
@@ -505,14 +506,13 @@
                     const notificationItems = $('#notificationItems');
                     const newNotification = `
                         <div class="dropdown-item">
-                            ${event}
+                            ${event.message}
                         </div>
                     `;
 
                     notificationItems.prepend(newNotification);
                     notificationItems.find('.no-notifications').remove();
-
-                    toastr.success(event);
+                    fetchContactsAndGroups();
                 });
         }, 4000);
 
@@ -522,7 +522,12 @@
                     markAllAsRead();
                 });
             });
+            $('#notificationDropdown').on('hidden.bs.dropdown', function () {
+                $('#notificationIcon').focus();
+            });
         });
+
+        
 
         function markAllAsRead() {
             $.ajax({

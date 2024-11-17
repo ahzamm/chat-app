@@ -25,6 +25,8 @@ class GroupCreate implements ShouldBroadcast
     public function broadcastOn()
     {
         $channels = [];
+        Log::info('Group members being broadcasted to:', $this->group->members->pluck('user_id')->toArray());
+
 
         foreach ($this->group->members as $member) {
             if ($member->user_id !== $this->group->created_by) {
@@ -37,11 +39,9 @@ class GroupCreate implements ShouldBroadcast
         return $channels;
     }
 
-
-
     public function broadcastWith()
     {
-        return $this->notification_message;
+        return ['message' => $this->notification_message];
     }
 
 
