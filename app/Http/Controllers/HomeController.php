@@ -4,14 +4,18 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use App\Models\User;
+
 use App\Models\Contact;
-use App\Models\Message;
+use App\Models\GroupMessage;
 use App\Models\Group;
 use App\Models\GroupMember;
+use App\Models\Message;
+use App\Models\Notification;
+use App\Models\User;
+
 use App\Events\MessageSent;
 use App\Events\GroupCreate;
-use App\Models\Notification;
+use App\Events\GroupMessageSent;
 
 class HomeController extends Controller
 {
@@ -205,10 +209,37 @@ class HomeController extends Controller
             'group_id' => 'required|exists:groups,id',
         ]);
 
-        $messages = Message::where('group_id', $request->group_id)
+        $messages = GroupMessage::where('group_id', $request->group_id)
             ->orderBy('created_at', 'asc')
             ->get();
 
         return response()->json($messages);
     }
+
+    public function sendGroupMessage(Request $request)
+    {
+        $request->validate([
+            'group_id' => 'required|exists:groups,id',
+            'message'  => 'required|string',
+        ]);
+
+        $isMember = GroupMember::where('group_id', $request->group_id)
+            ->where('user_id', Auth::id())
+            ->exists();
+
+        if (!$isMember) {
+            return response()->json(['error' => 'You are not a member of this group.'], 403);
+        }
+        
+        $message = GroupMessage::create([
+            'group_id'  => $request->group_id,
+            'sender_id' => Auth::id(),
+            'message'   => $request->message,
+        ]);
+
+        broadcast(new GroupMessageSent($message))->toOthers();
+
+        return response()->json(['message' => 'Message sent successfully!', 'data' => $message]);
+    }
+
 }

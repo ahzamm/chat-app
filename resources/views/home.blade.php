@@ -219,9 +219,9 @@
             </div>
             <div class="chat-footer d-flex align-items-center">
                 <input type="text" id="messageInput" placeholder="Type a message...">
-                <button class="btn btn-primary" onclick="sendMessage()">
+                <button class="btn btn-primary" onclick="handleSendButtonClick()">
                     <i class="fas fa-paper-plane"></i>
-                </button>
+                </button>                
             </div>
         </div>
     </div>
@@ -267,6 +267,10 @@
         let currentChatUserName = '';
         let currentChatUserId   = '';
         let currentUserId       = '{{ auth()->id() }}';
+
+        let currentChatType = 'individual'; // 'individual' or 'group'
+        let currentChatId = null; // User ID for individual or Group ID for group
+
 
         function sendMessage() {
             const messageText = $('#messageInput').val().trim();
@@ -395,15 +399,15 @@
         }
 
         function openChat(contactName, contactId) {
-                currentChatUserName = contactName;
-                currentChatUserId   = contactId;
-            let currentUserId       = '{{ auth()->id() }}';
+            let currentChatUserName = contactName;
+            let currentChatUserId   = contactId;
+                currentChatType     = 'individual';
+                currentChatId       = contactId;
 
-            $('#chatWith').text('Chat with: ' + contactName);
+            $('#chatWith').html('Chat with: <strong>' + contactName + '</strong>');
             $('#chatMessages').empty();
 
             window.Echo.private(`chat.${currentUserId}`).stopListening('.message.sent');
-
             window.Echo.private(`chat.${currentUserId}`)
             .listen('.message.sent', (event) => {
                 if(event.receiver_id==currentUserId & event.sender_id==currentChatUserId){
@@ -437,12 +441,19 @@
         }
 
         function openGroupChat(groupName, groupId) {
-            $('#chatWith').text('Group Chat: ' + groupName);
+            currentChatType = 'group';
+            currentChatId   = groupId;
+
+            $('#chatWith').html('Group Chat: <strong>' + groupName + '</strong>');
             $('#chatMessages').empty();
 
-            window.Echo.private(`group.${groupId}`).stopListening('.message.sent');
-            window.Echo.private(`group.${groupId}`)
-                .listen('.message.sent', (event) => {
+            console.log(groupId);
+
+            // window.Echo.private(`group.chat.${groupId}`).stopListening('.group.chat');
+            window.Echo.private(`group.chat.${groupId}`)
+                .listen('.group.chat', (event) => {
+                    // const parsedData = JSON.parse(event.data); // Parse the `data` field from string to object
+                    // console.log('Received group message:', parsedData);
                     $('#chatMessages').append(`<div class="message received">${event.message}</div>`);
                     $('#chatMessages').scrollTop($('#chatMessages')[0].scrollHeight);
                 });
@@ -456,7 +467,7 @@
                 },
                 success: function(messages) {
                     messages.forEach(message => {
-                        const messageClass = message.sender_id === currentUserId ? 'sent' : 'received';
+                        const messageClass = message.sender_id == currentUserId ? 'sent' : 'received';
                         $('#chatMessages').append(`
                             <div class="message ${messageClass}">${message.message}</div>
                         `);
@@ -470,6 +481,43 @@
                 }
             });
         }
+
+        function handleSendButtonClick() {
+            const messageText = $('#messageInput').val().trim();
+            if (messageText === '') return;
+
+            if (currentChatType === 'individual') {
+                sendMessage();
+            } else if (currentChatType === 'group') {
+                sendGroupMessage(currentChatId);
+            }
+        }
+
+
+        function sendGroupMessage(groupId) {
+            const messageText = $('#messageInput').val().trim();
+            if (messageText === '') return;
+
+            $.ajax({
+                url: '{{ route('send.group.message') }}',
+                method: 'POST',
+                data: {
+                    group_id: groupId,
+                    message: messageText,
+                    _token: '{{ csrf_token() }}'
+                },
+                success: function(response) {
+                    $('#messageInput').val('');
+                    $('#chatMessages').append(`<div class="message sent">${messageText}</div>`);
+                    $('#chatMessages').scrollTop($('#chatMessages')[0].scrollHeight);
+                },
+                error: function(xhr) {
+                    toastr.error('Failed to send message');
+                    console.error(xhr.responseText);
+                }
+            });
+        }
+
 
         function toggleDarkMode() {
             $('body').toggleClass('dark-mode');

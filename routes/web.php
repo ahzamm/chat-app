@@ -20,6 +20,6 @@ Route::middleware('auth')->group(function () {
     Route::post('/create-group'                  , [HomeController::class, 'createGroup'])->name('create.group');
     Route::post('/get-group-messages'            , [HomeController::class, 'getGroupMessages'])->name('get.group.messages');
     Route::post('/notifications/mark-all-as-read', [HomeController::class, 'markAllAsRead'])->name('notifications.markAllAsRead');
-
+    Route::post('/send-group-message'            , [HomeController::class, 'sendGroupMessage'])->name('send.group.message');
 
 });
