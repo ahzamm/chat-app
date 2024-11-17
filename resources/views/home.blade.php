@@ -193,11 +193,11 @@
                     </button>
                     <div class="dropdown-menu dropdown-menu-right" aria-labelledby="notificationIcon" id="notificationDropdown">
                         <div id="notificationItems" style="max-height: 200px; overflow-y: auto;">
-                            <span class="dropdown-item">No new notifications</span>
+                            <span class="dropdown-item no-notifications">No new notifications</span>
                         </div>
                         <div class="dropdown-divider"></div>
                         <button class="dropdown-item text-center text-primary" onclick="markAllAsRead()">Mark all as read</button>
-                    </div>
+                    </div>                    
                 </div>
                 <button class="btn btn-light btn-sm logout-btn" onclick="logout()"><i class="fas fa-sign-out-alt"></i></button>
             </div>          
@@ -263,7 +263,7 @@
     <script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script>
      @vite('resources/js/app.js')
     <script>
-        fetchContacts()
+        fetchContactsAndGroups()
         let currentChatUserName = '';
         let currentChatUserId   = '';
         let currentUserId       = '{{ auth()->id() }}';
@@ -309,7 +309,7 @@
                 success: function(response) {
                     toastr.success(response.message);
 
-                    fetchContacts()
+                    fetchContactsAndGroups()
 
                     $('#newContact').val('');
                 },
@@ -357,7 +357,7 @@
             }
         });
 
-        function fetchContacts() {
+        function fetchContactsAndGroups() {
             $('#dynamic-contacts').empty();
 
             $.ajax({
@@ -495,12 +495,54 @@
 
         setTimeout(() => {
             window.Echo.private(`group.create.${currentUserId}`)
-            .listen('.group.create', (event) => {
-                toastr.success(event.message);
-                fetchContacts();
-            });
+                .listen('.group.create', (event) => {
+                    const notificationCountElement = $('#notificationCount');
+                    let   currentCount             = parseInt(notificationCountElement.text()) || 0;
 
-          }, 4000);
+                    notificationCountElement.text(currentCount + 1);
+                    notificationCountElement.show();
+
+                    const notificationItems = $('#notificationItems');
+                    const newNotification = `
+                        <div class="dropdown-item">
+                            ${event}
+                        </div>
+                    `;
+
+                    notificationItems.prepend(newNotification);
+                    notificationItems.find('.no-notifications').remove();
+
+                    toastr.success(event);
+                });
+        }, 4000);
+
+        $(document).ready(function () {
+            $('#notificationIcon').on('click', function () {
+                $('#notificationDropdown').on('show.bs.dropdown', function () {
+                    markAllAsRead();
+                });
+            });
+        });
+
+        function markAllAsRead() {
+            $.ajax({
+                url: '{{ route("notifications.markAllAsRead") }}',
+                method: 'POST',
+                data: {
+                    _token: '{{ csrf_token() }}'
+                },
+                success: function () {
+                    $('#notificationCount').text(0).hide();
+                    toastr.success('All notifications marked as read.');
+                    $('#notificationItems').html('<span class="dropdown-item no-notifications">No new notifications</span>');
+                },
+                error: function () {
+                    toastr.error('Failed to mark notifications as read.');
+                }
+            });
+        }
+
+
 
         function createGroup() {
             const groupName = $('#groupName').val().trim();
@@ -520,6 +562,7 @@
                     _token: '{{ csrf_token() }}'
                 },
                 success: function(response) {
+                    fetchContactsAndGroups();
                     $('#createGroupModal').modal('hide');
                     toastr.success(response.message);
                 },
@@ -529,83 +572,6 @@
                 }
             });
         }
-
-        function updateNotificationCount(count) {
-            const badge = $('#notificationCount');
-            badge.text(count);
-
-            if (count > 0) {
-                badge.show();
-            } else {
-                badge.hide();
-            }
-        }
-
-        setInterval(() => {
-            const count = Math.floor(Math.random() * 10);
-            updateNotificationCount(count);
-        }, 5000);
-
-        function updateNotificationDropdown(notifications) {
-            const notificationItems = $('#notificationItems');
-            notificationItems.empty();
-
-            if (notifications.length === 0) {
-                notificationItems.append('<span class="dropdown-item">No new notifications</span>');
-            } else {
-                notifications.forEach(notification => {
-                    notificationItems.append(`
-                        <a href="${notification.link}" class="dropdown-item">
-                            ${notification.message}
-                        </a>
-                    `);
-                });
-            }
-
-            updateNotificationCount(notifications.length);
-        }
-
-        function updateNotificationCount(count) {
-            const badge = $('#notificationCount');
-            badge.text(count);
-
-            if (count > 0) {
-                badge.show();
-            } else {
-                badge.hide();
-            }
-        }
-
-        function markAllAsRead() {
-            $.ajax({
-                url: '#',
-                method: 'POST',
-                data: { _token: '{{ csrf_token() }}' },
-                success: function () {
-                    updateNotificationDropdown([]);
-                    toastr.success('All notifications marked as read.');
-                },
-                error: function () {
-                    toastr.error('Failed to mark notifications as read.');
-                }
-            });
-        }
-
-        function fetchNotifications() {
-            const exampleNotifications = [
-                { message: 'New message from John', link: '/chat/john' },
-                { message: 'Your group project is due tomorrow', link: '/tasks' },
-                { message: 'Alice commented on your post', link: '/comments' }
-            ];
-
-            updateNotificationDropdown(exampleNotifications);
-        }
-
-        fetchNotifications();
-
-        setInterval(fetchNotifications, 10000);
-
-
     </script>
 
 </body>

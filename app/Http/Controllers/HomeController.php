@@ -122,8 +122,6 @@ class HomeController extends Controller
 
     public function createGroup(Request $request)
     {
-        $userName = Auth::user()->name;
-
         $request->validate([
             'name'      => 'required|string|max:255',
             'members'   => 'required|array',
@@ -146,15 +144,26 @@ class HomeController extends Controller
                 'user_id'  => $memberId,
             ]);
 
+            $username = Auth::user()->name;
+            $notification_message = $username . 'added you in group ' . $group->name;
+
             Notification::create([
                 'user_id' => $memberId,
-                'text' => $userName . ' Added you in group ' . $group->name
+                'text'    => $notification_message,
+                'is_read' => 0
             ]);
 
-            broadcast(new GroupCreate(Group::with('members')->find($group->id), $userName));
+            broadcast(new GroupCreate(Group::with('members')->find($group->id), $notification_message));
         }
 
         return response()->json(['message' => 'Group created successfully!']);
+    }
+
+    public function markAllAsRead(Request $request)
+    {
+        Notification::where('user_id', Auth::id())->update(['is_read' => 1]);
+
+        return response()->json(['message' => 'All notifications marked as read.'], 200);
     }
 
     public function getContactsAndGroups()

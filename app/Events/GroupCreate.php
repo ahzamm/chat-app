@@ -14,12 +14,12 @@ class GroupCreate implements ShouldBroadcast
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
     public $group;
-    public $userName;
+    public $notification_message;
 
-    public function __construct($group, $userName)
+    public function __construct($group, $notification_message)
     {
         $this->group = $group;
-        $this->userName = $userName;
+        $this->notification_message = $notification_message;
     }
 
     public function broadcastOn()
@@ -41,7 +41,7 @@ class GroupCreate implements ShouldBroadcast
 
     public function broadcastWith()
     {
-        return ['message' => $this->userName .' added you to the group ' . $this->group->name];
+        return $this->notification_message;
     }
 
 
