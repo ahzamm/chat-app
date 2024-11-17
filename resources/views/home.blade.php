@@ -496,7 +496,7 @@
         setTimeout(() => {
             window.Echo.private(`group.create.${currentUserId}`)
             .listen('.group.create', (event) => {
-                toastr.success(event.group.name + ' has been created, and you have been added!');
+                toastr.success(event.message);
                 fetchContacts();
             });
 

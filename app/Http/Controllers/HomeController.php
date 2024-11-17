@@ -122,6 +122,8 @@ class HomeController extends Controller
 
     public function createGroup(Request $request)
     {
+        $userName = Auth::user()->name;
+
         $request->validate([
             'name'      => 'required|string|max:255',
             'members'   => 'required|array',
@@ -146,10 +148,10 @@ class HomeController extends Controller
 
             Notification::create([
                 'user_id' => $memberId,
-                'text' => Auth::id() . ' Added you in group ' . $group->name
+                'text' => $userName . ' Added you in group ' . $group->name
             ]);
 
-            broadcast(new GroupCreate(Group::with('members')->find($group->id)));
+            broadcast(new GroupCreate(Group::with('members')->find($group->id), $userName));
         }
 
         return response()->json(['message' => 'Group created successfully!']);

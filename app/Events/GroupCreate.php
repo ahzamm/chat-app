@@ -2,14 +2,11 @@
 
 namespace App\Events;
 
-use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\InteractsWithSockets;
-use Illuminate\Broadcasting\PresenceChannel;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 
 class GroupCreate implements ShouldBroadcast
@@ -17,10 +14,12 @@ class GroupCreate implements ShouldBroadcast
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
     public $group;
+    public $userName;
 
-    public function __construct($group)
+    public function __construct($group, $userName)
     {
         $this->group = $group;
+        $this->userName = $userName;
     }
 
     public function broadcastOn()
@@ -42,13 +41,7 @@ class GroupCreate implements ShouldBroadcast
 
     public function broadcastWith()
     {
-        return [
-            'group' => [
-                'id' => $this->group->id,
-                'name' => $this->group->name,
-            ],
-            'message' => ' added you to the group ' . $this->group->name,
-        ];
+        return ['message' => $this->userName .' added you to the group ' . $this->group->name];
     }
 
 
