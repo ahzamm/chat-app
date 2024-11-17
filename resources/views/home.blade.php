@@ -406,7 +406,7 @@
 
             window.Echo.private(`chat.${currentUserId}`)
             .listen('.message.sent', (event) => {
-                if(event.receiver_id==currentUserId){
+                if(event.receiver_id==currentUserId & event.sender_id==currentChatUserId){
                     $('#chatMessages').append(`<div class="message received">${event.message}</div>`);
                     $('#chatMessages').scrollTop($('#chatMessages')[0].scrollHeight);
                 }
