@@ -449,11 +449,9 @@
 
             console.log(groupId);
 
-            // window.Echo.private(`group.chat.${groupId}`).stopListening('.group.chat');
+            window.Echo.private(`group.chat.${groupId}`).stopListening('.group.chat');
             window.Echo.private(`group.chat.${groupId}`)
                 .listen('.group.chat', (event) => {
-                    // const parsedData = JSON.parse(event.data); // Parse the `data` field from string to object
-                    // console.log('Received group message:', parsedData);
                     $('#chatMessages').append(`<div class="message received">${event.message}</div>`);
                     $('#chatMessages').scrollTop($('#chatMessages')[0].scrollHeight);
                 });
